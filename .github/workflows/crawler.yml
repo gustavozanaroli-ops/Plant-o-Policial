@@ -1,0 +1,36 @@
+name: Atualização Horária do Radar Policial
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar Dependências
+        run: |
+          pip install -r requirements.txt
+
+      - name: Executar Varredura Policial e Documentos Oficiais
+        run: |
+          python crawler.py
+
+      - name: Salvar e Publicar Dados Atualizados
+        run: |
+          git config --global user.name "RadarPolicialBot"
+          git config --global user.email "bot@radarpolicial.local"
+          git add radar_noticias.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(radar): atualização horária das ocorrências policiais [skip ci]" && git push)
